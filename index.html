@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSuite Pro - 15 Araçlı Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090d16;
+            --panel: #131b2e;
+            --border: #1e293b;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #34d399;
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 30px 15px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+        header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .nav-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 25px; }
+        .nav-btn { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); color: var(--text-muted); font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .nav-btn:hover { border-color: var(--accent); color: #fff; }
+        .nav-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+        .panel { display: none; background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; min-height: 420px; }
+        .panel.active { display: block; }
+        .panel-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #fff; }
+
+        .btn-primary { padding: 12px 24px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-weight: 700; cursor: pointer; font-size: 1rem; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Hız Butonları */
+        .speed-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .speed-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #1e293b; color: var(--text-muted); font-weight: 700; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+        .speed-btn:hover { border-color: var(--accent); color: #fff; }
+        .speed-btn.active { background: var(--warning); color: #000; border-color: var(--warning); box-shadow: 0 0 10px rgba(245,158,11,0.4); }
+
+        /* 3D ZAR */
+        .dice-scene { perspective: 1000px; display: flex; justify-content: center; gap: 40px; margin: 30px 0; }
+        .cube { width: 80px; height: 80px; position: relative; transform-style: preserve-3d; transition: transform 3.8s cubic-bezier(0.1, 0.8, 0.1, 1); }
+        .face { position: absolute; width: 80px; height: 80px; background: #1e293b; border: 2px solid var(--accent); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: #fff; }
+        .front  { transform: rotateY(0deg) translateZ(40px); }
+        .back   { transform: rotateY(180deg) translateZ(40px); }
+        .right  { transform: rotateY(90deg) translateZ(40px); }
+        .left   { transform: rotateY(-90deg) translateZ(40px); }
+        .top    { transform: rotateX(90deg) translateZ(40px); }
+        .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+        /* 3D YAZI TURA */
+        .coin-scene { perspective: 1000px; display: flex; justify-content: center; margin: 30px 0; }
+        .coin { width: 110px; height: 110px; position: relative; transform-style: preserve-3d; transition: transform 3.8s cubic-bezier(0.1, 0.8, 0.1, 1); }
+        .coin-face { position: absolute; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; border: 4px solid var(--warning); backface-visibility: hidden; }
+        .coin-heads { background: #f59e0b; color: #fff; transform: rotateY(0deg); }
+        .coin-tails { background: #475569; color: var(--accent); transform: rotateY(180deg); }
+
+        .wheel-wrapper { position: relative; width: 250px; height: 250px; margin: 0 auto 15px auto; }
+        .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--danger); z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        canvas#wheelCanvas { border-radius: 50%; border: 4px solid var(--border); }
+
+        @keyframes textPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .winner-pop {
+            animation: textPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            font-size: 1.6rem !important;
+            color: var(--success) !important;
+            text-shadow: 0 0 15px rgba(52, 211, 153, 0.6);
+        }
+
+        .tool-box { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        .text-input-area { width: 100%; height: 80px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; font-size: 1rem; outline: none; resize: none; }
+        
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 300px; margin: 0 auto; }
+        .calc-screen { grid-column: span 4; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 1.8rem; font-family: monospace; text-align: right; color: var(--accent); min-height: 50px; }
+        .calc-btn { padding: 12px; font-size: 1.1rem; font-weight: 700; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
+        .calc-btn.op { background: var(--accent); color: #000; }
+
+        .todo-box { max-width: 500px; margin: 0 auto; }
+        .todo-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .todo-input-group input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: #fff; outline: none; }
+        .todo-list { display: flex; flex-direction: column; gap: 8px; }
+        .todo-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); }
+        .todo-item.done { text-decoration: line-through; opacity: 0.5; }
+
+        .typing-container { max-width: 600px; margin: 0 auto; text-align: center; }
+        .word-card { font-size: 2rem; font-weight: 800; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); color: var(--accent); }
+        .typing-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: #fff; font-size: 1rem; outline: none; margin-bottom: 15px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .stat-box .val { font-size: 1.3rem; font-weight: 800; color: #fff; }
+
+        .game-canvas { width: 100%; height: 260px; background: rgba(0,0,0,0.4); border-radius: 14px; border: 2px dashed var(--border); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .target-circle { width: 60px; height: 60px; background: #f43f5e; border-radius: 50%; position: absolute; display: none; }
+
+        .pass-grid { max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        .pass-out { display: flex; gap: 8px; }
+        .pass-out input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: var(--accent); font-size: 1.1rem; font-weight: 700; text-align: center; }
+
+        .timer-display { font-size: 4rem; font-weight: 800; text-align: center; margin: 15px 0; font-family: monospace; color: var(--accent); }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; height: 160px; margin-bottom: 15px; }
+        .color-box { border-radius: 10px; display: flex; align-items: flex-end; justify-content: center; padding: 8px; font-weight: 700; cursor: pointer; color: #fff; font-size: 0.85rem; }
+        .note-area { width: 100%; height: 200px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; padding: 15px; color: #fff; font-size: 1rem; outline: none; resize: none; }
+
+        .clock-display { font-size: 3rem; font-weight: 800; text-align: center; color: #fff; font-family: monospace; margin: 15px 0; }
+        .stopwatch-display { font-size: 3rem; font-weight: 800; text-align: center; color: var(--warning); font-family: monospace; margin: 15px 0; }
+        .reverse-output { width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; font-size: 1.1rem; font-weight: 700; color: var(--success); min-height: 50px; word-break: break-all; }
+
+        footer { text-align: center; margin-top: 25px; color: var(--text-muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ CyberSuite Pro</h1>
+        <p>15 Farklı Araç Platformu</p>
+    </header>
+
+    <div class="nav-grid">
+        <button class="nav-btn active" onclick="switchTab('dice', this)">🎲 3D Zar</button>
+        <button class="nav-btn" onclick="switchTab('wheel', this)">🎡 Çark</button>
+        <button class="nav-btn" onclick="switchTab('coin', this)">🪙 3D Yazı Tura</button>
+        <button class="nav-btn" onclick="switchTab('todo', this)">🎯 Görevler</button>
+        <button class="nav-btn" onclick="switchTab('calc', this)">🧮 Hesap Makinesi</button>
+        <button class="nav-btn" onclick="switchTab('typing', this)">⌨️ Hız Testi</button>
+        <button class="nav-btn" onclick="switchTab('reaction', this)">🎯 Refleks</button>
+        <button class="nav-btn" onclick="switchTab('password', this)">🔐 Şifre Üretici</button>
+        <button class="nav-btn" onclick="switchTab('pomodoro', this)">⏱️ Odak</button>
+        <button class="nav-btn" onclick="switchTab('palette', this)">🎨 Renk Paleti</button>
+        <button class="nav-btn" onclick="switchTab('notes', this)">📝 Notlar</button>
+        <button class="nav-btn" onclick="switchTab('texttool', this)">🔤 Metin Aracı</button>
+        <button class="nav-btn" onclick="switchTab('stopwatch', this)">⏱️ Kronometre</button>
+        <button class="nav-btn" onclick="switchTab('worldclock', this)">🕒 Canlı Saat</button>
+        <button class="nav-btn" onclick="switchTab('voicespeech', this)">🔊 Tersten Ses</button>
+    </div>
+
+    <!-- 1. 3D Zar -->
+    <div id="dice" class="panel active">
+        <h2 class="panel-title">3D Zar Attırıcı</h2>
+        <div class="tool-box" style="text-align:center;">
+            <div class="dice-scene">
+                <div class="cube" id="cube1"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">5</div><div class="face bottom">2</div></div>
+                <div class="cube" id="cube2"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">5</div><div class="face bottom">2</div></div>
+            </div>
+            <div style="font-size:1.3rem; font-weight:800; color:var(--success); margin-bottom:15px;">Toplam: <span id="diceTotal">--</span></div>
+            <button class="btn-primary" onclick="rollDice()">🎲 Zarları At!</button>
+        </div>
+    </div>
+
+    <!-- 2. Şans Çarkı -->
+    <div id="wheel" class="panel">
+        <h2 class="panel-title">Şans Çarkı</h2>
+        <div class="tool-box" style="align-items:center;">
+            <div class="speed-group">
+                <button class="speed-btn" onclick="setWheelSpeed('yavas', this)">🐢 YAVAŞ</button>
+                <button class="speed-btn active" onclick="setWheelSpeed('orta', this)">⚡ ORTA</button>
+                <button class="speed-btn" onclick="setWheelSpeed('hizli', this)">🚀 HIZLI</button>
+            </div>
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <canvas id="wheelCanvas" width="250" height="250"></canvas>
+            </div>
+            <div id="wheelWinner" style="font-size:1.2rem; font-weight:800; color:var(--accent); min-height:25px; text-align:center;"></div>
+            <textarea id="wheelItems" class="text-input-area" style="height:60px; text-align:center;" oninput="drawWheel()">Pizza&#10;Hamburger&#10;Döner&#10;Lahmacun</textarea>
+            <button id="spinBtn" class="btn-primary" style="width:100%;" onclick="spinWheel()">🎡 Çarkı Çevir!</button>
+        </div>
+    </div>
+
+    <!-- 3. 3D Yazı Tura -->
+    <div id="coin" class="panel">
+        <h2 class="panel-title">3D Yazı Tura</h2>
+        <div class="tool-box" style="text-align:center;">
+            <div class="coin-scene">
+                <div class="coin" id="coinElem">
+                    <div class="coin-face coin-heads">YAZI</div>
+                    <div class="coin-face coin-tails">TURA</div>
+                </div>
+            </div>
+            <div id="coinResult" style="font-size:1.3rem; font-weight:800; color:var(--warning); margin-bottom:15px;">Sonuç: --</div>
+            <button class="btn-primary" onclick="flipCoin()">🪙 Parayı At!</button>
+        </div>
+    </div>
+
+    <!-- 4. Görevler -->
+    <div id="todo" class="panel">
+        <h2 class="panel-title">Yapılacaklar Listesi</h2>
+        <div class="todo-box">
+            <div class="todo-input-group">
+                <input type="text" id="todoInput" placeholder="Görev ekle...">
+                <button class="btn-primary" onclick="addTodo()">Ekle</button>
+            </div>
+            <div class="todo-list" id="todoList"></div>
+        </div>
+    </div>
+
+    <!-- 5. Hesap Makinesi -->
+    <div id="calc" class="panel">
+        <h2 class="panel-title">Hesap Makinesi</h2>
+        <div class="calc-grid">
+            <div class="calc-screen" id="calcScreen">0</div>
+            <button class="calc-btn op" onclick="clearCalc()">C</button>
+            <button class="calc-btn" onclick="pressCalc('(')">(</button>
+            <button class="calc-btn" onclick="pressCalc(')')">)</button>
+            <button class="calc-btn op" onclick="pressCalc('/')">/</button>
+            <button class="calc-btn" onclick="pressCalc('7')">7</button>
+            <button class="calc-btn" onclick="pressCalc('8')">8</button>
+            <button class="calc-btn" onclick="pressCalc('9')">9</button>
+            <button class="calc-btn op" onclick="pressCalc('*')">*</button>
+            <button class="calc-btn" onclick="pressCalc('4')">4</button>
+            <button class="calc-btn" onclick="pressCalc('5')">5</button>
+            <button class="calc-btn" onclick="pressCalc('6')">6</button>
+            <button class="calc-btn op" onclick="pressCalc('-')">-</button>
+            <button class="calc-btn" onclick="pressCalc('1')">1</button>
+            <button class="calc-btn" onclick="pressCalc('2')">2</button>
+            <button class="calc-btn" onclick="pressCalc('3')">3</button>
+            <button class="calc-btn op" onclick="pressCalc('+')">+</button>
+            <button class="calc-btn" onclick="pressCalc('0')">0</button>
+            <button class="calc-btn" onclick="pressCalc('.')">.</button>
+            <button class="calc-btn op" style="grid-column: span 2; background:var(--success);" onclick="evalCalc()">=</button>
+        </div>
+    </div>
+
+    <!-- 6. Klavye Hız Testi -->
+    <div id="typing" class="panel">
+        <h2 class="panel-title">Klavye Hız Testi</h2>
+        <div class="typing-container">
+            <div class="stats-grid">
+                <div class="stat-box"><div class="val" id="timerVal">30</div><div>Süre</div></div>
+                <div class="stat-box"><div class="val" id="wpmVal">0</div><div>WPM</div></div>
+                <div class="stat-box"><div class="val" id="accuracyVal">100%</div><div>Doğruluk</div></div>
+            </div>
+            <div class="word-card" id="wordCard">başla</div>
+            <input type="text" id="typingInput" class="typing-input" placeholder="Yazmaya başladığın an süre sayar..." oninput="onTypingInput()">
+            <button class="btn-primary" onclick="resetTypingTest()">Yeniden Başlat</button>
+        </div>
+    </div>
+
+    <!-- 7. Refleks Testi -->
+    <div id="reaction" class="panel">
+        <h2 class="panel-title">Refleks Testi</h2>
+        <div class="game-canvas" id="gameCanvas" onclick="onCanvasClick()">
+            <div id="gameMsg">Başlamak için tıkla...</div>
+            <div class="target-circle" id="targetCircle"></div>
+        </div>
+        <div style="display:flex; justify-content:space-around; margin-top:15px; font-weight:bold;">
+            <div>Skor: <span id="reactScore" style="color:var(--accent);">0</span></div>
+            <div>Tepki: <span id="reactTime" style="color:var(--success);">0 ms</span></div>
+        </div>
+    </div>
+
+    <!-- 8. Şifre Üretici -->
+    <div id="password" class="panel">
+        <h2 class="panel-title">Güvenli Şifre Üretici</h2>
+        <div class="pass-grid">
+            <div class="pass-out">
+                <input type="text" id="passOut" readonly placeholder="Şifre">
+                <button class="btn-primary" onclick="copyPassword()">Kopyala</button>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <label>Uzunluk: <span id="passLenText">16</span></label>
+                <input type="range" id="passLength" min="8" max="32" value="16" oninput="document.getElementById('passLenText').innerText=this.value; generatePass();">
+            </div>
+            <button class="btn-primary" onclick="generatePass()">Yeni Şifre Üret</button>
+        </div>
+    </div>
+
+    <!-- 9. Odak (Pomodoro) -->
+    <div id="pomodoro" class="panel">
+        <h2 class="panel-title">Odak Zamanlayıcısı</h2>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button class="btn-primary" onclick="startTimer()">Başlat</button>
+            <button class="btn-primary" style="background:var(--danger); color:#fff;" onclick="pauseTimer()">Durdur</button>
+            <button class="btn-primary" style="background:#475569; color:#fff;" onclick="resetTimer()">Sıfırla</button>
+        </div>
+    </div>
+
+    <!-- 10. Renk Paleti -->
+    <div id="palette" class="panel">
+        <h2 class="panel-title">Renk Paleti Üretici</h2>
+        <div class="palette-grid" id="paletteGrid"></div>
+        <div style="text-align:center;"><button class="btn-primary" onclick="generatePalette()">Yeni Palet Üret</button></div>
+    </div>
+
+    <!-- 11. Notlar -->
+    <div id="notes" class="panel">
+        <h2 class="panel-title">Otomatik Kaydedilen Notlar</h2>
+        <textarea id="noteInput" class="note-area" placeholder="Notlarını buraya yaz..." oninput="saveNotes()"></textarea>
+    </div>
+
+    <!-- 12. Metin Analizi -->
+    <div id="texttool" class="panel">
+        <h2 class="panel-title">Metin Analiz Aracı</h2>
+        <div class="tool-box">
+            <textarea id="textToolInput" class="text-input-area" placeholder="Metin yazın..." oninput="analyzeText()"></textarea>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" onclick="transformText('upper')">BÜYÜK HARF</button>
+                <button class="btn-primary" onclick="transformText('lower')">küçük harf</button>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; text-align:center;">
+                <div class="stat-box"><div class="val" id="txtChars">0</div><div>Karakter</div></div>
+                <div class="stat-box"><div class="val" id="txtWords">0</div><div>Kelime</div></div>
+                <div class="stat-box"><div class="val" id="txtLines">0</div><div>Satır</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13. Kronometre -->
+    <div id="stopwatch" class="panel">
+        <h2 class="panel-title">Kronometre</h2>
+        <div class="tool-box" style="text-align:center;">
+            <div class="stopwatch-display" id="swDisplay">00:00:00</div>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button class="btn-primary" onclick="startStopwatch()">Başlat</button>
+                <button class="btn-primary" style="background:var(--danger); color:#fff;" onclick="stopStopwatch()">Durdur</button>
+                <button class="btn-primary" style="background:#475569; color:#fff;" onclick="resetStopwatch()">Sıfırla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 14. Canlı Saat -->
+    <div id="worldclock" class="panel">
+        <h2 class="panel-title">Canlı Dijital Saat</h2>
+        <div class="tool-box" style="text-align:center;">
+            <div class="clock-display" id="liveClock">00:00:00</div>
+            <p id="liveDate" style="color:var(--text-muted);"></p>
+        </div>
+    </div>
+
+    <!-- 15. Tersten Ses -->
+    <div id="voicespeech" class="panel">
+        <h2 class="panel-title">Tersten Yaz ve Oku</h2>
+        <div class="tool-box">
+            <textarea id="reverseInput" class="text-input-area" placeholder="Bir şeyler yaz..." oninput="processReverseText()"></textarea>
+            <div id="reverseOutput" class="reverse-output">...</div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" onclick="speakText(document.getElementById('reverseInput').value)">Normal Oku 🔊</button>
+                <button class="btn-primary" style="background:var(--warning); color:#000;" onclick="speakText(document.getElementById('reverseOutput').innerText)">Tersten Oku 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 CyberSuite Pro</p>
+    </footer>
+</div>
+
+<script>
+    function switchTab(id, btn) {
+        var panels = document.getElementsByClassName('panel');
+        for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+
+        var buttons = document.getElementsByClassName('nav-btn');
+        for (var i = 0; i < buttons.length; i++) buttons[i].classList.remove('active');
+
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+
+        if(id === 'wheel') drawWheel();
+    }
+
+    // 3D Zar
+    let cubeRotations = [ {x:0, y:0}, {x:0, y:0} ];
+    const targetOrientations = {
+        1: { x: 0, y: 0 }, 6: { x: 0, y: 180 },
+        3: { x: 0, y: -90 }, 4: { x: 0, y: 90 },
+        5: { x: -90, y: 0 }, 2: { x: 90, y: 0 }
+    };
+    function rollDice() {
+        const v1 = Math.floor(Math.random() * 6) + 1;
+        const v2 = Math.floor(Math.random() * 6) + 1;
+        cubeRotations[0].x += 360 * 6 + targetOrientations[v1].x;
+        cubeRotations[0].y += 360 * 6 + targetOrientations[v1].y;
+        cubeRotations[1].x += 360 * 6 + targetOrientations[v2].x;
+        cubeRotations[1].y += 360 * 6 + targetOrientations[v2].y;
+        document.getElementById('cube1').style.transform = `rotateX(${cubeRotations[0].x}deg) rotateY(${cubeRotations[0].y}deg)`;
+        document.getElementById('cube2').style.transform = `rotateX(${cubeRotations[1].x}deg) rotateY(${cubeRotations[1].y}deg)`;
+        setTimeout(() => { document.getElementById('diceTotal').innerText = v1 + v2; }, 3800);
+    }
+
+    // 3D Yazı Tura
+    let coinRot = 0;
+    function flipCoin() {
+        const isHeads = Math.random() < 0.5;
+        coinRot += 2520 + (isHeads ? 0 : 180);
+        document.getElementById('coinElem').style.transform = `rotateY(${coinRot}deg)`;
+        setTimeout(() => {
+            document.getElementById('coinResult').innerText = "Sonuç: " + (isHeads ? "YAZI 🪙" : "TURA 🪙");
+        }, 3800);
+    }
+
+    // Çark Hız Ayarı
+    var wheelSpeedSetting = 'orta';
+    function setWheelSpeed(speed, btn) {
+        wheelSpeedSetting = speed;
+        var parent = btn.parentElement.children;
+        for(let b of parent) b.classList.remove('active');
+        btn.classList.add('active');
+    }
+
+    // Şans Çarkı (Güvenli Çizim ve Hız Motoru)
+    var colors = ["#38bdf8", "#818cf8", "#c084fc", "#f43f5e", "#fb923c", "#34d399", "#facc15", "#4ade80", "#a855f7", "#ec4899"];
+    let currentAngle = 0, isSpinning = false;
+    
+    function drawWheel() {
+        var canvas = document.getElementById('wheelCanvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var val = document.getElementById('wheelItems').value;
+        var items = val ? val.split('\n').filter(item => item.trim() !== '') : ["Seçenek"];
+        if(items.length === 0) items = ["Seçenek"];
+        
+        ctx.clearRect(0, 0, 250, 250);
+        var arc = (2 * Math.PI) / items.length;
+        
+        for (var i = 0; i < items.length; i++) {
+            var angle = currentAngle + i * arc;
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.beginPath(); ctx.arc(125, 125, 115, angle, angle + arc); ctx.lineTo(125, 125); ctx.fill();
+            
+            ctx.save(); ctx.fillStyle = "#fff"; 
+            ctx.font = items.length > 12 ? "bold 9px sans-serif" : "bold 11px sans-serif";
+            ctx.translate(125 + Math.cos(angle + arc / 2) * 70, 125 + Math.sin(angle + arc / 2) * 70);
+            ctx.rotate(angle + arc / 2 + Math.PI / 2);
+            ctx.fillText(items[i], -ctx.measureText(items[i]).width / 2, 0);
+            ctx.restore();
+        }
+    }
+
+    function spinWheel() {
+        if (isSpinning) return;
+        isSpinning = true;
+        document.getElementById('spinBtn').disabled = true;
+        
+        var winnerBox = document.getElementById('wheelWinner');
+        winnerBox.className = "";
+        winnerBox.innerText = "Çark dönüyor...";
+        
+        var val = document.getElementById('wheelItems').value;
+        var items = val ? val.split('\n').filter(item => item.trim() !== '') : ["Seçenek"];
+        if(items.length === 0) items = ["Seçenek"];
+        
+        var numItems = items.length, arc = (2 * Math.PI) / numItems;
+        var targetIndex = Math.floor(Math.random() * numItems);
+        
+        let spins = 15;
+        let duration = 4000;
+        
+        if(wheelSpeedSetting === 'hizli') { spins = 40; duration = 7000; }
+        if(wheelSpeedSetting === 'yavas') { spins = 8; duration = 5000; }
+
+        var targetAngle = (2 * Math.PI * spins) + (3 * Math.PI / 2) - (targetIndex * arc) - (arc / 2);
+        var startAngleVal = currentAngle, angleChange = targetAngle - startAngleVal;
+        var startTime = null;
+
+        function animateWheel(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var progress = Math.min((timestamp - startTime) / duration, 1);
+            
+            let smoothProgress = 1 - Math.pow(1 - progress, 3);
+            
+            if(progress > 0.88) {
+                let backBounce = Math.sin((progress - 0.88) / 0.12 * Math.PI) * 0.035 * (1 - progress);
+                currentAngle = startAngleVal + (angleChange * smoothProgress) + backBounce;
+            } else {
+                currentAngle = startAngleVal + (angleChange * smoothProgress);
+            }
+
+            drawWheel();
+
+            if (progress < 1) {
+                requestAnimationFrame(animateWheel);
+            } else {
+                currentAngle = targetAngle;
+                drawWheel();
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+                
+                winnerBox.className = "winner-pop";
+                winnerBox.innerText = "🎉 KAZANAN: " + items[targetIndex] + " 🎉";
+            }
+        }
+        requestAnimationFrame(animateWheel);
+    }
+
+    // Görevler (Todo)
+    var todos = JSON.parse(localStorage.getItem('todos') || '[]');
+    function renderTodos() {
+        var list = document.getElementById('todoList');
+        list.innerHTML = '';
+        for (var i = 0; i < todos.length; i++) {
+            var t = todos[i];
+            list.innerHTML += '<div class="todo-item ' + (t.done ? 'done' : '') + '">' +
+                '<span onclick="toggleTodo(' + i + ')" style="cursor:pointer;">' + t.text + '</span>' +
+                '<button onclick="deleteTodo(' + i + ')" style="background:var(--danger); border:none; color:#fff; padding:4px 8px; border-radius:6px; cursor:pointer;">Sil</button>' +
+            '</div>';
+        }
+        localStorage.setItem('todos', JSON.stringify(todos));
+    }
+    function addTodo() {
+        var input = document.getElementById('todoInput');
+        if (input.value.trim()) { todos.push({ text: input.value.trim(), done: false }); input.value = ''; renderTodos(); }
+    }
+    function toggleTodo(i) { todos[i].done = !todos[i].done; renderTodos(); }
+    function deleteTodo(i) { todos.splice(i, 1); renderTodos(); }
+
+    // Hesap Makinesi
+    var calcVal = "0";
+    function pressCalc(v) {
+        if (calcVal === "0" && !isNaN(v)) calcVal = v; 
+        else if (calcVal === "0" && v === '(') calcVal = '(';
+        else calcVal += v;
+        document.getElementById('calcScreen').innerText = calcVal;
+    }
+    function clearCalc() { calcVal = "0"; document.getElementById('calcScreen').innerText = calcVal; }
+    function evalCalc() {
+        try {
+            let sanitized = calcVal.replace(/[^0-9+\-*/().]/g, '');
+            let result = Function('"use strict"; return (' + sanitized + ')')();
+            calcVal = String(result);
+            document.getElementById('calcScreen').innerText = calcVal;
+        } catch (e) {
+            calcVal = "Hata";
+            document.getElementById('calcScreen').innerText = calcVal;
+            setTimeout(() => { calcVal = "0"; }, 1500);
+        }
+    }
+
+    // Klavye Hız Testi
+    var wordList = ["yazılım", "kodlama", "tasarım", "klavye", "performans", "donanım", "internet", "ekran"];
+    var typingTimer = null, timeLeft = 30, typingStarted = false, correctTyped = 0;
+    function onTypingInput() {
+        var input = document.getElementById('typingInput'), wordCard = document.getElementById('wordCard');
+        if (!typingStarted && input.value.length > 0) {
+            typingStarted = true;
+            typingTimer = setInterval(function () {
+                timeLeft--; document.getElementById('timerVal').innerText = timeLeft;
+                if (timeLeft <= 0) { clearInterval(typingTimer); input.disabled = true; wordCard.innerText = "Bitti!"; }
+            }, 1000);
+        }
+        if (input.value.trim() === wordCard.innerText) {
+            correctTyped++; input.value = '';
+            wordCard.innerText = wordList[Math.floor(Math.random() * wordList.length)];
+            document.getElementById('wpmVal').innerText = Math.round((correctTyped / (30 - timeLeft || 1)) * 60);
+        }
+    }
+    function resetTypingTest() {
+        clearInterval(typingTimer); timeLeft = 30; typingStarted = false; correctTyped = 0;
+        document.getElementById('timerVal').innerText = '30'; document.getElementById('wpmVal').innerText = '0';
+        var input = document.getElementById('typingInput'); input.disabled = false; input.value = '';
+        document.getElementById('wordCard').innerText = wordList[Math.floor(Math.random() * wordList.length)];
+    }
+
+    // Refleks Testi
+    var reactActive = false, reactStartTime = 0;
+    function onCanvasClick() {
+        var msg = document.getElementById('gameMsg'), targetCircle = document.getElementById('targetCircle');
+        if (!reactActive) {
+            reactActive = true; msg.innerText = "Kırmızı daireyi bekle...";
+            setTimeout(function () {
+                targetCircle.style.left = Math.random() * 180 + 'px'; targetCircle.style.top = Math.random() * 180 + 'px';
+                targetCircle.style.display = 'block'; reactStartTime = Date.now(); msg.innerText = "TIKLA!";
+            }, Math.random() * 2000 + 1000);
+        } else if (targetCircle.style.display === 'block') {
+            document.getElementById('reactTime').innerText = (Date.now() - reactStartTime) + ' ms';
+            targetCircle.style.display = 'none'; reactActive = false; msg.innerText = "Tebrikler! Tekrar tıkla.";
+        }
+    }
+
+    // Şifre Üretici
+    function generatePass() {
+        var len = document.getElementById('passLength').value, chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()", pass = "";
+        for (var i = 0; i < len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+        document.getElementById('passOut').value = pass;
+    }
+    function copyPassword() {
+        var out = document.getElementById('passOut'); if (!out.value) return; out.select(); document.execCommand('copy'); alert("Kopyalandı!");
+    }
+
+    // Odak (Pomodoro)
+    var pomoSeconds = 1500, pomoTimer = null;
+    function startTimer() {
+        if (pomoTimer) return;
+        pomoTimer = setInterval(function () {
+            if (pomoSeconds > 0) {
+                pomoSeconds--;
+                document.getElementById('timerDisplay').innerText = String(Math.floor(pomoSeconds / 60)).padStart(2, '0') + ":" + String(pomoSeconds % 60).padStart(2, '0');
+            } else { clearInterval(pomoTimer); alert("Süre bitti!"); }
+        }, 1000);
+    }
+    function pauseTimer() { clearInterval(pomoTimer); pomoTimer = null; }
+    function resetTimer() { clearInterval(pomoTimer); pomoTimer = null; pomoSeconds = 1500; document.getElementById('timerDisplay').innerText = "25:00"; }
+
+    // Renk Paleti
+    function generatePalette() {
+        var grid = document.getElementById('paletteGrid'); grid.innerHTML = '';
+        for (var i = 0; i < 5; i++) {
+            var hex = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            grid.innerHTML += '<div class="color-box" style="background:' + hex + '" onclick="navigator.clipboard.writeText(\'' + hex + '\'); alert(\'Kopyalandı!\')">' + hex + '</div>';
+        }
+    }
+
+    // Notlar
+    function saveNotes() { localStorage.setItem('notes', document.getElementById('noteInput').value); }
+    function loadNotes() { document.getElementById('noteInput').value = localStorage.getItem('notes') || ''; }
+
+    // Metin Analizi
+    function analyzeText() {
+        var text = document.getElementById('textToolInput').value;
+        document.getElementById('txtChars').innerText = text.length;
+        document.getElementById('txtWords').innerText = text.trim() ? text.trim().split(/\s+/).length : 0;
+        document.getElementById('txtLines').innerText = text ? text.split('\n').length : 0;
+    }
+    function transformText(type) {
+        var area = document.getElementById('textToolInput');
+        area.value = type === 'upper' ? area.value.toUpperCase() : area.value.toLowerCase();
+        analyzeText();
+    }
+
+    // Kronometre
+    var swSeconds = 0, swInterval = null;
+    function startStopwatch() {
+        if (swInterval) return;
+        swInterval = setInterval(function () {
+            swSeconds++;
+            document.getElementById('swDisplay').innerText = "00:" + String(Math.floor(swSeconds / 60)).padStart(2, '0') + ":" + String(swSeconds % 60).padStart(2, '0');
+        }, 1000);
+    }
+    function stopStopwatch() { clearInterval(swInterval); swInterval = null; }
+    function resetStopwatch() { clearInterval(swInterval); swInterval = null; swSeconds = 0; document.getElementById('swDisplay').innerText = "00:00:00"; }
+
+    // Canlı Saat
+    setInterval(function () {
+        var now = new Date();
+        document.getElementById('liveClock').innerText = now.toLocaleTimeString('tr-TR');
+        document.getElementById('liveDate').innerText = now.toLocaleDateString('tr-TR');
+    }, 1000);
+
+    // Tersten Ses
+    function processReverseText() {
+        var val = document.getElementById('reverseInput').value;
+        document.getElementById('reverseOutput').innerText = val.split('').reverse().join('') || "...";
+    }
+    function speakText(text) {
+        if (!text) return; window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text); u.lang = 'tr-TR'; window.speechSynthesis.speak(u);
+    }
+
+    // İlk Çalıştırma
+    generatePass();
+    generatePalette();
+    loadNotes();
+    renderTodos();
+    drawWheel();
+</script>
+</body>
+</html>
